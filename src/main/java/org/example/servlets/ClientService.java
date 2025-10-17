@@ -23,38 +23,55 @@ public class ClientService {
         }
     }
 
+    // Получить всех клиентов
     public String getAllClients() {
         List<Client> clients = clientDAO.getAll();
         return gson.toJson(clients);
     }
 
-    public boolean createClient(String jsonPayload) {
-        try {
-            Client client = gson.fromJson(jsonPayload, Client.class);
-            if (client != null) {
-                clientDAO.create(client);
-                return true;
-            }
-        } catch (Exception e) { e.printStackTrace(); }
-        return false;
+    // Получить одного клиента по id
+    public String getClientById(int id) {
+        Client client = clientDAO.read(id);
+        return gson.toJson(client);
     }
 
-    public boolean updateClient(String jsonPayload) {
+    // Создать клиента по параметрам
+    public boolean createClient(String fullName, String contacts) {
         try {
-            Client client = gson.fromJson(jsonPayload, Client.class);
-            if (client != null && client.getId() > 0) {
-                clientDAO.update(client);
-                return true;
-            }
-        } catch (Exception e) { e.printStackTrace(); }
-        return false;
+            Client client = new Client();
+            client.setFullName(fullName);
+            client.setContacts(contacts);
+            clientDAO.create(client);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
+    // Обновить клиента по параметрам
+    public boolean updateClient(int id, String fullName, String contacts) {
+        try {
+            Client client = clientDAO.read(id);
+            if (client == null) return false;
+            client.setFullName(fullName);
+            client.setContacts(contacts);
+            clientDAO.update(client);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Удалить клиента по id
     public boolean deleteClient(int id) {
         try {
             clientDAO.delete(id);
             return true;
-        } catch (Exception e) { e.printStackTrace(); }
-        return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

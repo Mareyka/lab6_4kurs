@@ -5,65 +5,88 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.example.servlets.ClientService;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.stream.Collectors;
+import java.io.PrintWriter;
 
-@WebServlet("/clients/*")
+@WebServlet("/clients")
 public class ClientServlet extends HttpServlet {
 
     private ClientService clientService;
 
-    public ClientServlet() {
-        this.clientService = new ClientService();
+    @Override
+    public void init() throws ServletException {
+        clientService = new ClientService();
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String json = this.clientService.getAllClients();
+        String idParam = req.getParameter("id");
+        String json;
+        if (idParam != null) {
+            try {
+                int id = Integer.parseInt(idParam);
+                json = clientService.getClientById(id); // метод нужно добавить
+            } catch (NumberFormatException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid id");
+                return;
+            }
+        } else {
+            json = clientService.getAllClients();
+        }
         outputResponse(resp, json, HttpServletResponse.SC_OK);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-        boolean res = clientService.createClient(body);
-        outputResponse(resp, null, res ? HttpServletResponse.SC_OK : HttpServletResponse.SC_BAD_REQUEST);
+        String fullName = req.getParameter("fullName");
+        String contacts = req.getParameter("contacts");
+        boolean res = clientService.createClient(fullName, contacts); // метод нужно добавить
+        resp.setStatus(res ? HttpServletResponse.SC_OK : HttpServletResponse.SC_BAD_REQUEST);
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-        boolean res = clientService.updateClient(body);
-        outputResponse(resp, null, res ? HttpServletResponse.SC_OK : HttpServletResponse.SC_BAD_REQUEST);
+        String idParam = req.getParameter("id");
+        String fullName = req.getParameter("fullName");
+        String contacts = req.getParameter("contacts");
+
+        if (idParam == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing id");
+            return;
+        }
+
+        try {
+            int id = Integer.parseInt(idParam);
+            boolean res = clientService.updateClient(id, fullName, contacts); // метод нужно добавить
+            resp.setStatus(res ? HttpServletResponse.SC_OK : HttpServletResponse.SC_BAD_REQUEST);
+        } catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid id");
+        }
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String path = req.getPathInfo();
-        if (path != null && path.length() > 1) {
-            try {
-                int id = Integer.parseInt(path.substring(1));
-                boolean res = clientService.deleteClient(id);
-                outputResponse(resp, null, res ? HttpServletResponse.SC_OK : HttpServletResponse.SC_BAD_REQUEST);
-            } catch (NumberFormatException e) {
-                outputResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST);
-            }
-        } else {
-            outputResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST);
+        String idParam = req.getParameter("id");
+        if (idParam == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing id");
+            return;
+        }
+        try {
+            int id = Integer.parseInt(idParam);
+            boolean res = clientService.deleteClient(id);
+            resp.setStatus(res ? HttpServletResponse.SC_OK : HttpServletResponse.SC_BAD_REQUEST);
+        } catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid id");
         }
     }
 
-    private void outputResponse(HttpServletResponse resp, String payload, int status) {
-        try {
-            resp.setStatus(status);
-            resp.setContentType("application/json");
-            if (payload != null) {
-                OutputStream os = resp.getOutputStream();
-                os.write(payload.getBytes());
-                os.flush();
-            }
-        } catch (IOException e) { e.printStackTrace(); }
+    private void outputResponse(HttpServletResponse resp, String payload, int status) throws IOException {
+        resp.setStatus(status);
+        resp.setContentType("application/json");
+        try (PrintWriter out = resp.getWriter()) {
+            if (payload != null) out.print(payload);
+        }
     }
 }
