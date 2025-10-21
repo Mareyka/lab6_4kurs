@@ -19,9 +19,12 @@ public class ClientDAO {
             ps.setString(2, client.getContacts());
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) client.setId(rs.getInt(1));
+                if (rs.next())
+                    client.setId(rs.getInt(1));
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public Client read(int id) {
@@ -29,8 +32,15 @@ public class ClientDAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) return new Client(rs.getInt("id"), rs.getString("full_name"), rs.getString("contacts"));
-        } catch (SQLException e) { e.printStackTrace(); }
+            if (rs.next())
+                return new Client(
+                        rs.getInt("id"),
+                        rs.getString("full_name"),
+                        rs.getString("contacts")
+                );
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -41,7 +51,9 @@ public class ClientDAO {
             ps.setString(2, client.getContacts());
             ps.setInt(3, client.getId());
             ps.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void delete(int id) {
@@ -49,16 +61,26 @@ public class ClientDAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             ps.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public List<Client> getAll() {
         List<Client> clients = new ArrayList<>();
         String sql = "SELECT * FROM Clients";
-        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next())
-                clients.add(new Client(rs.getInt("id"), rs.getString("full_name"), rs.getString("contacts")));
-        } catch (SQLException e) { e.printStackTrace(); }
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                clients.add(new Client(
+                        rs.getInt("id"),
+                        rs.getString("full_name"),
+                        rs.getString("contacts")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return clients;
     }
 }
