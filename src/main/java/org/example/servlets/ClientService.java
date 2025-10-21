@@ -23,19 +23,16 @@ public class ClientService {
         }
     }
 
-    // Получить всех клиентов
     public String getAllClients() {
         List<Client> clients = clientDAO.getAll();
         return gson.toJson(clients);
     }
 
-    // Получить одного клиента по id
     public String getClientById(int id) {
         Client client = clientDAO.read(id);
         return gson.toJson(client);
     }
 
-    // Создать клиента по параметрам
     public boolean createClient(String fullName, String contacts) {
         try {
             Client client = new Client();
@@ -49,7 +46,6 @@ public class ClientService {
         }
     }
 
-    // Обновить клиента по параметрам
     public boolean updateClient(int id, String fullName, String contacts) {
         try {
             Client client = clientDAO.read(id);
@@ -64,7 +60,6 @@ public class ClientService {
         }
     }
 
-    // Удалить клиента по id
     public boolean deleteClient(int id) {
         try {
             clientDAO.delete(id);

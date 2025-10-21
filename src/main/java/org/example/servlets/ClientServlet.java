@@ -5,14 +5,12 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.example.servlets.ClientService;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/clients")
+@WebServlet("/clients/*")
 public class ClientServlet extends HttpServlet {
-
     private ClientService clientService;
 
     @Override
@@ -22,14 +20,22 @@ public class ClientServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String idParam = req.getParameter("id");
+        String pathInfo = req.getPathInfo();
         String json;
-        if (idParam != null) {
+
+        if (pathInfo != null && pathInfo.length() > 1) {
             try {
-                int id = Integer.parseInt(idParam);
-                json = clientService.getClientById(id); // метод нужно добавить
+                String idStr = pathInfo.substring(1);
+                int id = Integer.parseInt(idStr);
+                json = clientService.getClientById(id);
+
+                if (json == null || json.isEmpty() || "null".equals(json)) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Client with id " + id + " not found");
+                    return;
+                }
+
             } catch (NumberFormatException e) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid id");
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid id format");
                 return;
             }
         } else {
@@ -42,7 +48,8 @@ public class ClientServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String fullName = req.getParameter("fullName");
         String contacts = req.getParameter("contacts");
-        boolean res = clientService.createClient(fullName, contacts); // метод нужно добавить
+
+        boolean res = clientService.createClient(fullName, contacts);
         resp.setStatus(res ? HttpServletResponse.SC_OK : HttpServletResponse.SC_BAD_REQUEST);
     }
 
@@ -59,7 +66,7 @@ public class ClientServlet extends HttpServlet {
 
         try {
             int id = Integer.parseInt(idParam);
-            boolean res = clientService.updateClient(id, fullName, contacts); // метод нужно добавить
+            boolean res = clientService.updateClient(id, fullName, contacts);
             resp.setStatus(res ? HttpServletResponse.SC_OK : HttpServletResponse.SC_BAD_REQUEST);
         } catch (NumberFormatException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid id");
@@ -69,10 +76,12 @@ public class ClientServlet extends HttpServlet {
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idParam = req.getParameter("id");
+
         if (idParam == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing id");
             return;
         }
+
         try {
             int id = Integer.parseInt(idParam);
             boolean res = clientService.deleteClient(id);
@@ -86,7 +95,8 @@ public class ClientServlet extends HttpServlet {
         resp.setStatus(status);
         resp.setContentType("application/json");
         try (PrintWriter out = resp.getWriter()) {
-            if (payload != null) out.print(payload);
+            if (payload != null)
+                out.print(payload);
         }
     }
 }
