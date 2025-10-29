@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 /**
  * КЛАСС: UserDAO (Data Access Object)
  * НАЗНАЧЕНИЕ: Обеспечивает взаимодействие с таблицей Users в базе данных
- * data Access Object (DAO) - отделяет бизнес-логику от операций с БД
+ * Data Access Object (DAO) - отделяет бизнес-логику от операций с БД
  */
 public class UserDAO {
     // Подключение к базе данных - инжектируется через конструктор
